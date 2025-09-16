@@ -1,0 +1,48 @@
+{
+    "name": "vscode-filemerge-runner",
+    "displayName": "FileMerge Runner",
+    "description": "Führt den FileMerge direkt in Node.js aus (Datei-/Ordnerauswahl, Ausschlüsse, Optionen).",
+    "version": "1.0.0",
+    "publisher": "stratton-cologne",
+    "engines": {
+        "vscode": "^1.90.0"
+    },
+    "categories": [
+        "Other"
+    ],
+    "contributes": {
+        "commands": [
+            {
+                "command": "filemerge.mergeInVSCode",
+                "title": "FileMerge: Merge Dateien/Ordner…",
+                "category": "FileMerge"
+            }
+        ]
+    },
+    "activationEvents": [
+        "onCommand:filemerge.mergeInVSCode"
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Stratton-Cologne/vscode-filemerge-runner.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Stratton-Cologne/vscode-filemerge-runner/issues"
+    },
+    "homepage": "https://github.com/Stratton-Cologne/vscode-filemerge-runner#readme",
+    "license": "MIT",
+    "main": "./dist/extension.js",
+    "scripts": {
+        "vscode:prepublish": "npm run build",
+        "vscode:build": "npx vsce package",
+        "build": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "package": "vsce package"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "@types/vscode": "^1.90.0",
+        "typescript": "^5.4.0",
+        "vsce": "^2.15.0"
+    }
+}
