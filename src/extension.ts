@@ -2,6 +2,93 @@ import * as vscode from "vscode";
 import * as fs from "fs";
 import * as path from "path";
 
+/** --- NEU: Binär-Erkennung --- */
+const BINARY_EXTS = new Set([
+    // Bilder
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".webp",
+    ".bmp",
+    ".ico",
+    ".tif",
+    ".tiff",
+    // Doku/Container
+    ".pdf",
+    ".doc",
+    ".docx",
+    ".xls",
+    ".xlsx",
+    ".ppt",
+    ".pptx",
+    ".odt",
+    ".ods",
+    ".odp",
+    // Archive
+    ".zip",
+    ".7z",
+    ".rar",
+    ".tar",
+    ".gz",
+    ".bz2",
+    ".xz",
+    // Audio/Video
+    ".mp3",
+    ".wav",
+    ".flac",
+    ".aac",
+    ".ogg",
+    ".m4a",
+    ".mp4",
+    ".mkv",
+    ".mov",
+    ".avi",
+    ".webm",
+    // Fonts
+    ".ttf",
+    ".otf",
+    ".woff",
+    ".woff2",
+    // Sonstiges Binär
+    ".exe",
+    ".dll",
+    ".so",
+    ".dylib",
+    ".bin",
+    ".dat",
+]);
+
+function isProbablyBinary(filePath: string): boolean {
+    const ext = path.extname(filePath).toLowerCase();
+    if (BINARY_EXTS.has(ext)) return true;
+
+    // Sniff: erste Bytes lesen -> NUL-Byte oder viele Steuerzeichen = binär
+    try {
+        const fd = fs.openSync(filePath, "r");
+        const buf = Buffer.alloc(512);
+        const n = fs.readSync(fd, buf, 0, buf.length, 0);
+        fs.closeSync(fd);
+        const slice = buf.subarray(0, n);
+        if (slice.includes(0)) return true; // NUL-Byte → sehr wahrscheinlich binär
+
+        // Anteil „verdächtiger“ Zeichen (>30% = binär)
+        let suspicious = 0;
+        for (const b of slice) {
+            // erlaubte Whitespaces
+            if (b === 9 || b === 10 || b === 13) continue;
+            // druckbare ASCII
+            if (b >= 32 && b <= 126) continue;
+            // >=128 erlauben (UTF-8 Mehrbyte-Anfänge)
+            if (b >= 128) continue;
+            suspicious++;
+        }
+        return slice.length > 0 && suspicious / slice.length > 0.3;
+    } catch {
+        return false;
+    }
+}
+
 /** Pfad nach POSIX normalisieren (für konsistente Globs) */
 function toPosix(p: string) {
     return p.replaceAll("\\", "/");
@@ -210,7 +297,14 @@ export function activate(context: vscode.ExtensionContext) {
                     const rel = path.relative(cwd, file) || path.basename(file);
                     merged += `\n===== ${rel} =====\n`;
                     try {
-                        merged += readFileContent(file, filterComments) + "\n";
+                        if (!isProbablyBinary(file)) {
+                            merged +=
+                                readFileContent(file, filterComments) + "\n";
+                        } else {
+                            merged +=
+                                "Hinweis: Binärdatei – Inhalt ausgelassen.\n";
+                        }
+                        // Bei binären/kryptischen Dateien -> nur Header, kein Inhalt
                     } catch (err: any) {
                         merged += `\n[LESFEHLER] ${file}: ${
                             err?.message || err

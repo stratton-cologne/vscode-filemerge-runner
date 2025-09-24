@@ -2,7 +2,7 @@
     "name": "vscode-filemerge-runner",
     "displayName": "FileMerge Runner",
     "description": "Führt den FileMerge direkt in Node.js aus (Datei-/Ordnerauswahl, Ausschlüsse, Optionen).",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "publisher": "stratton-cologne",
     "engines": {
         "vscode": "^1.90.0"
